@@ -29,11 +29,28 @@ func main() {
 	}
 }
 
+type User struct {
+	Id       int32
+	Email    string
+	Password string
+}
+
+func convertToDbUser(protobufUser pb.User) User {
+	return User{Id: protobufUser.Id, Email: protobufUser.Email, Password: protobufUser.Password}
+}
+
 type Server struct {
 	pb.UnimplementedUserServiceServer
 }
 
 func (s *Server) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	givenUser := request.GetUser()
-	return &pb.CreateUserResponse{User: givenUser}, nil
+	protobufUser := request.GetUser()
+	userToAdd := convertToDbUser(*protobufUser)
+	err := addUserToDb(userToAdd)
+	return &pb.CreateUserResponse{User: protobufUser}, err
+}
+
+func addUserToDb(userToAdd User) error {
+	resultFromAdding := db.Table("enduser").Create(&userToAdd)
+	return resultFromAdding.Error
 }
