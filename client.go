@@ -21,7 +21,8 @@ func main() {
 
 	log.Printf("Creating a new user")
 	randomId := createRandomId()
-	user := &pb.User{Id: randomId, Email: fmt.Sprintf("somedude%d@gmail.com", randomId), Password: "sfsadf"}
+	userEmail := fmt.Sprintf("somedude%d@gmail.com", randomId)
+	user := &pb.User{Id: randomId, Email: userEmail, Password: "sfsadf"}
 	createUserResp, err := client.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
 	if err != nil {
 		log.Fatalf("Error while creating user: %v", err)
@@ -39,10 +40,26 @@ func main() {
 
 	log.Printf("Fetching an non-existent user")
 	fetchUserResp, err = client.FetchUser(context.Background(), &pb.FetchUserRequest{Email: "asfsdfs@gmail.com"})
-	if err != nil {
-		log.Fatalf("Error while creating user: %v", err)
+	if err == nil {
+		log.Fatalf("Recieved no err, instead got response: %v", fetchUserResp)
 	}
-	log.Printf("Response: %v", fetchUserResp)
+	log.Printf("Correctly received error: %v", err)
+	log.Println("----------------------------------------------")
+
+	log.Printf("Deleting an existent user")
+	deleteUserResp, err := client.DeleteUser(context.Background(), &pb.DeleteUserRequest{Email: userEmail})
+	if err != nil {
+		log.Fatalf("Received error while deleting: %v", err)
+	}
+	log.Printf("Response: %v", deleteUserResp)
+	log.Println("----------------------------------------------")
+
+	log.Printf("Deleting a non-existent user")
+	deleteUserResp, err = client.DeleteUser(context.Background(), &pb.DeleteUserRequest{Email: "asfsdfs@gmail.com"})
+	if err == nil {
+		log.Fatalf("Recieved no err, instead got response: %v", fetchUserResp)
+	}
+	log.Printf("Correctly received error: %v", err)
 	log.Println("----------------------------------------------")
 }
 

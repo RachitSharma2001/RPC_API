@@ -25,11 +25,11 @@ message FetchUserResponse {
 }
 
 message DeleteUserRequest {
-    int32 id = 1;
+    string email = 1;
 }
 
 message DeleteUserResponse {
-    int32 id = 1;
+    User user = 1;
 }
 
 message UpdateUserRequest {

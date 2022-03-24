@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
 
@@ -35,14 +36,6 @@ type User struct {
 	Password string
 }
 
-func convertToDbUser(protobufUser pb.User) User {
-	return User{Id: protobufUser.GetId(), Email: protobufUser.GetEmail(), Password: protobufUser.GetPassword()}
-}
-
-func convertToProtobufUser(dbUser User) *pb.User {
-	return &pb.User{Id: dbUser.Id, Email: dbUser.Email, Password: dbUser.Password}
-}
-
 type Server struct {
 	pb.UnimplementedUserServiceServer
 }
@@ -66,8 +59,33 @@ func (s *Server) FetchUser(ctx context.Context, request *pb.FetchUserRequest) (*
 	return &pb.FetchUserResponse{User: protobufUser}, err
 }
 
+func (s *Server) DeleteUser(ctx context.Context, request *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
+	emailOfUserToDelete := request.GetEmail()
+	deletedUser, err := deleteFromDb(emailOfUserToDelete)
+	protobufUser := convertToProtobufUser(deletedUser)
+	return &pb.DeleteUserResponse{User: protobufUser}, err
+}
+
+func deleteFromDb(emailOfUserToDelete string) (User, error) {
+	userToDelete, userFindErr := findUserInDb(emailOfUserToDelete)
+	if errorExists(userFindErr) {
+		return User{}, errors.New("User not found")
+	} else {
+		db.Table("enduser").Where("email=?", emailOfUserToDelete).Delete(&User{})
+		return userToDelete, nil
+	}
+}
+
 func findUserInDb(userEmail string) (User, error) {
 	foundUser := User{}
 	resultOfFind := db.Table("enduser").Where("email=?", userEmail).Take(&foundUser)
 	return foundUser, resultOfFind.Error
+}
+
+func convertToDbUser(protobufUser pb.User) User {
+	return User{Id: protobufUser.GetId(), Email: protobufUser.GetEmail(), Password: protobufUser.GetPassword()}
+}
+
+func convertToProtobufUser(dbUser User) *pb.User {
+	return &pb.User{Id: dbUser.Id, Email: dbUser.Email, Password: dbUser.Password}
 }
