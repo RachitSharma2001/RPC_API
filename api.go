@@ -36,7 +36,11 @@ type User struct {
 }
 
 func convertToDbUser(protobufUser pb.User) User {
-	return User{Id: protobufUser.Id, Email: protobufUser.Email, Password: protobufUser.Password}
+	return User{Id: protobufUser.GetId(), Email: protobufUser.GetEmail(), Password: protobufUser.GetPassword()}
+}
+
+func convertToProtobufUser(dbUser User) *pb.User {
+	return &pb.User{Id: dbUser.Id, Email: dbUser.Email, Password: dbUser.Password}
 }
 
 type Server struct {
@@ -53,4 +57,17 @@ func (s *Server) CreateUser(ctx context.Context, request *pb.CreateUserRequest) 
 func addUserToDb(userToAdd User) error {
 	resultFromAdding := db.Table("enduser").Create(&userToAdd)
 	return resultFromAdding.Error
+}
+
+func (s *Server) FetchUser(ctx context.Context, request *pb.FetchUserRequest) (*pb.FetchUserResponse, error) {
+	userEmail := request.GetEmail()
+	userInDb, err := findUserInDb(userEmail)
+	protobufUser := convertToProtobufUser(userInDb)
+	return &pb.FetchUserResponse{User: protobufUser}, err
+}
+
+func findUserInDb(userEmail string) (User, error) {
+	foundUser := User{}
+	resultOfFind := db.Table("enduser").Where("email=?", userEmail).Take(&foundUser)
+	return foundUser, resultOfFind.Error
 }

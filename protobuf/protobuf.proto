@@ -16,6 +16,33 @@ message CreateUserResponse {
     User user = 1;
 }
 
+message FetchUserRequest {
+    string email = 1;
+}
+
+message FetchUserResponse {
+    User user = 1;
+}
+
+message DeleteUserRequest {
+    int32 id = 1;
+}
+
+message DeleteUserResponse {
+    int32 id = 1;
+}
+
+message UpdateUserRequest {
+    User user = 1;
+}
+
+message UpdateUserResponse {
+    User user = 1;
+}
+
 service UserService {
     rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+    rpc FetchUser (FetchUserRequest) returns (FetchUserResponse) {}
+    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
+    rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse) {}
 }
