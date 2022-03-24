@@ -33,7 +33,7 @@ func main() {
 	log.Printf("Fetching an existent user")
 	fetchUserResp, err := client.FetchUser(context.Background(), &pb.FetchUserRequest{Email: "ronald@gmail.com"})
 	if err != nil {
-		log.Fatalf("Error while creating user: %v", err)
+		log.Fatalf("Error while fetching user: %v", err)
 	}
 	log.Printf("Response: %v", fetchUserResp)
 	log.Println("----------------------------------------------")
@@ -42,6 +42,24 @@ func main() {
 	fetchUserResp, err = client.FetchUser(context.Background(), &pb.FetchUserRequest{Email: "asfsdfs@gmail.com"})
 	if err == nil {
 		log.Fatalf("Recieved no err, instead got response: %v", fetchUserResp)
+	}
+	log.Printf("Correctly received error: %v", err)
+	log.Println("----------------------------------------------")
+
+	log.Printf("Updating an existent user")
+	userToUpdate := pb.User{Id: 5, Email: "james@gmail.com", Password: "somethingnew"}
+	updateUserResp, err := client.UpdateUser(context.Background(), &pb.UpdateUserRequest{User: &userToUpdate})
+	if err != nil {
+		log.Fatalf("Received error while updating: %v", err)
+	}
+	log.Printf("Response: %v", updateUserResp)
+	log.Println("----------------------------------------------")
+
+	log.Printf("Updating a non-existent user")
+	nonExistentUser := pb.User{Id: 241241, Email: userEmail, Password: "somethingnew"}
+	updateUserResp, err = client.UpdateUser(context.Background(), &pb.UpdateUserRequest{User: &nonExistentUser})
+	if err == nil {
+		log.Fatalf("Recieved no err, instead got response: %v", updateUserResp)
 	}
 	log.Printf("Correctly received error: %v", err)
 	log.Println("----------------------------------------------")

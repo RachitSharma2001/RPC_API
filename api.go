@@ -54,7 +54,7 @@ func addUserToDb(userToAdd User) error {
 
 func (s *Server) FetchUser(ctx context.Context, request *pb.FetchUserRequest) (*pb.FetchUserResponse, error) {
 	userEmail := request.GetEmail()
-	userInDb, err := findUserInDb(userEmail)
+	userInDb, err := findUserInDbByEmail(userEmail)
 	protobufUser := convertToProtobufUser(userInDb)
 	return &pb.FetchUserResponse{User: protobufUser}, err
 }
@@ -67,7 +67,7 @@ func (s *Server) DeleteUser(ctx context.Context, request *pb.DeleteUserRequest) 
 }
 
 func deleteFromDb(emailOfUserToDelete string) (User, error) {
-	userToDelete, userFindErr := findUserInDb(emailOfUserToDelete)
+	userToDelete, userFindErr := findUserInDbByEmail(emailOfUserToDelete)
 	if errorExists(userFindErr) {
 		return User{}, errors.New("User not found")
 	} else {
@@ -76,9 +76,31 @@ func deleteFromDb(emailOfUserToDelete string) (User, error) {
 	}
 }
 
-func findUserInDb(userEmail string) (User, error) {
+func (s *Server) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	user := convertToDbUser(*request.GetUser())
+	err := updateInDb(user)
+	return &pb.UpdateUserResponse{User: request.GetUser()}, err
+}
+
+func updateInDb(user User) error {
+	_, userFindErr := findUserInDbById(user.Id)
+	if errorExists(userFindErr) {
+		return errors.New("User not found")
+	} else {
+		db.Table("enduser").Where("id=?", user.Id).Updates(user)
+		return nil
+	}
+}
+
+func findUserInDbByEmail(userEmail string) (User, error) {
 	foundUser := User{}
 	resultOfFind := db.Table("enduser").Where("email=?", userEmail).Take(&foundUser)
+	return foundUser, resultOfFind.Error
+}
+
+func findUserInDbById(userId int32) (User, error) {
+	foundUser := User{}
+	resultOfFind := db.Table("enduser").Where("id=?", userId).Take(&foundUser)
 	return foundUser, resultOfFind.Error
 }
 
