@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
+	errHelp "fake.com/GoRPCApi/ErrHelp"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -12,8 +12,8 @@ import (
 func InitDB() *gorm.DB {
 	var err error
 	db, err := GetDatabase()
-	if errorExists(err) {
-		throwConnectionError(err)
+	if errHelp.ErrorExists(err) {
+		errHelp.ThrowConnectionError(err)
 	}
 	return db
 }
@@ -26,25 +26,11 @@ func GetDatabase() (*gorm.DB, error) {
 
 func CloseDB() {
 	sqlDb, err := db.DB()
-	if errorExists(err) {
-		throwCloseError(err)
+	if errHelp.ErrorExists(err) {
+		errHelp.ThrowCloseError(err)
 	} else {
 		closeSqlDB(sqlDb)
 	}
-}
-
-func errorExists(err error) bool {
-	return err != nil
-}
-
-func throwConnectionError(err error) {
-	fmt.Printf("Unexpected connection error: %v", err)
-	os.Exit(3)
-}
-
-func throwCloseError(err error) {
-	fmt.Printf("Unexpected error while closing: %v", err)
-	os.Exit(3)
 }
 
 func closeSqlDB(sqlDb *sql.DB) {
