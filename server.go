@@ -4,7 +4,8 @@ import (
 	"context"
 	"net"
 
-	errHelp "fake.com/GoRPCApi/ErrHelp"
+	database "fake.com/GoRPCApi/database"
+	"fake.com/GoRPCApi/errhelp"
 	pb "fake.com/GoRPCApi/protobuf"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -19,7 +20,7 @@ const (
 )
 
 func init() {
-	db = InitDB()
+	db = database.InitDB()
 }
 
 func main() {
@@ -30,8 +31,8 @@ func main() {
 
 func listenAtPort(port string) net.Listener {
 	lis, err := net.Listen("tcp", port)
-	if errHelp.ErrorExists(err) {
-		errHelp.ThrowPortListenErr(err)
+	if errhelp.ErrorExists(err) {
+		errhelp.ThrowPortListenErr(err)
 	}
 	return lis
 }
@@ -44,8 +45,8 @@ func registerServer() *grpc.Server {
 
 func connectServerToListener(listener net.Listener, server *grpc.Server) {
 	err := server.Serve(listener)
-	if errHelp.ErrorExists(err) {
-		errHelp.ThrowServeErr(err)
+	if errhelp.ErrorExists(err) {
+		errhelp.ThrowServeErr(err)
 	}
 }
 
@@ -94,8 +95,8 @@ func addUserToDb(userToAdd DbUser) error {
 
 func deleteUserFromDb(emailOfUserToDelete string) (DbUser, error) {
 	userToDelete, userFindErr := findUserInDbByEmail(emailOfUserToDelete)
-	if errHelp.ErrorExists(userFindErr) {
-		return DbUser{}, errHelp.ErrUnableToDeleteUser
+	if errhelp.ErrorExists(userFindErr) {
+		return DbUser{}, errhelp.ErrUnableToDeleteUser
 	} else {
 		db.Table(userTableInDb).Where(whatIsUserEmail, emailOfUserToDelete).Delete(&DbUser{})
 		return userToDelete, nil
@@ -104,8 +105,8 @@ func deleteUserFromDb(emailOfUserToDelete string) (DbUser, error) {
 
 func updateUserInDb(user DbUser) error {
 	_, userFindErr := findUserInDbById(user.Id)
-	if errHelp.ErrorExists(userFindErr) {
-		return errHelp.ErrUnableToUpdateUser
+	if errhelp.ErrorExists(userFindErr) {
+		return errhelp.ErrUnableToUpdateUser
 	} else {
 		db.Table(userTableInDb).Where(whatIsUserId, user.Id).Updates(user)
 		return nil
