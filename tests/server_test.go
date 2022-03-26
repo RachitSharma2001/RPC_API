@@ -23,12 +23,15 @@ var _ = Describe("Given the client", func() {
 	Describe("Given that we want to add a user", func() {
 
 		Context("if the user is not already in the db", func() {
-			id := createRandomId()
+			id := createRandomNum()
 			email := fmt.Sprintf("Some%d@gmail.com", id)
 			user := &pb.User{Id: id, Password: "pass", Email: email}
-			_, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
-			It("the user should be successfully added", func() {
+			response, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
+			It("no error should be returned", func() {
 				Expect(errFromAdd).NotTo(HaveOccurred())
+			})
+			It("the response should contain the user", func() {
+				Expect(response.GetUser()).To(Equal(user))
 			})
 		})
 
@@ -63,9 +66,33 @@ var _ = Describe("Given the client", func() {
 			})
 		})
 	})
+
+	Describe("Given that we want to update the user", func() {
+		Context("if the user exists in the db", func() {
+			randomNum := createRandomNum()
+			newPassword := fmt.Sprintf("somethingnew%d", randomNum)
+			user := &pb.User{Id: 5, Password: newPassword, Email: "james@gmail.com"}
+			response, errFromUpdate := server.UpdateUser(context.Background(), &pb.UpdateUserRequest{User: user})
+			It("no error should be returned", func() {
+				Expect(errFromUpdate).NotTo(HaveOccurred())
+			})
+			It("response should contain correctly updated user", func() {
+				Expect(response.GetUser()).To(Equal(user))
+			})
+		})
+
+		Context("if the user does not exit in the db", func() {
+			nonExistentUserId := -10
+			user := &pb.User{Id: int32(nonExistentUserId), Password: "random", Email: "adfsf@gmail.com"}
+			_, errFromUpdate := server.UpdateUser(context.Background(), &pb.UpdateUserRequest{User: user})
+			It("an error should be returned", func() {
+				Expect(errFromUpdate).To(HaveOccurred())
+			})
+		})
+	})
 })
 
-func createRandomId() int32 {
+func createRandomNum() int32 {
 	source := rand.NewSource(time.Now().UnixNano())
 	return int32(rand.New(source).Intn(100000))
 }
