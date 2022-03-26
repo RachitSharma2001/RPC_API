@@ -20,26 +20,23 @@ func TestTests(t *testing.T) {
 
 var _ = Describe("Given the client", func() {
 	server := Server{}
-	Describe("Given that we want to add a user", func() {
 
-		Context("if the user is not already in the db", func() {
-			id := createRandomNum()
-			email := fmt.Sprintf("Some%d@gmail.com", id)
-			user := &pb.User{Id: id, Password: "pass", Email: email}
-			response, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
+	Describe("Given that we want to delete a user", func() {
+		Context("if the user exists in the db", func() {
+			userToDelete := &pb.User{Id: 99645, Password: "randompass", Email: "ronald99645@gmail.com"}
+			response, errFromDelete := server.DeleteUser(context.Background(), &pb.DeleteUserRequest{Email: userToDelete.Email})
 			It("no error should be returned", func() {
-				Expect(errFromAdd).NotTo(HaveOccurred())
+				Expect(errFromDelete).NotTo(HaveOccurred())
 			})
-			It("the response should contain the user", func() {
-				Expect(response.GetUser()).To(Equal(user))
+			It("Response should contain the correct user", func() {
+				Expect(response.GetUser()).To(Equal(userToDelete))
 			})
 		})
 
-		Context("if the user is already in the db", func() {
-			user := &pb.User{Id: 5, Password: "somethingnew", Email: "james@gmail.com"}
-			_, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
+		Context("if the user does not exist in the db", func() {
+			_, errFromDelete := server.DeleteUser(context.Background(), &pb.DeleteUserRequest{Email: "nobodywhoishere@nobody"})
 			It("an error should be returned", func() {
-				Expect(errFromAdd).To(HaveOccurred())
+				Expect(errFromDelete).To(HaveOccurred())
 			})
 		})
 	})
@@ -67,7 +64,7 @@ var _ = Describe("Given the client", func() {
 		})
 	})
 
-	Describe("Given that we want to update the user", func() {
+	Describe("Given that we want to update a user", func() {
 		Context("if the user exists in the db", func() {
 			randomNum := createRandomNum()
 			newPassword := fmt.Sprintf("somethingnew%d", randomNum)
@@ -87,6 +84,28 @@ var _ = Describe("Given the client", func() {
 			_, errFromUpdate := server.UpdateUser(context.Background(), &pb.UpdateUserRequest{User: user})
 			It("an error should be returned", func() {
 				Expect(errFromUpdate).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("Given that we want to add a user", func() {
+
+		Context("if the user is not already in the db", func() {
+			user := &pb.User{Id: 99645, Password: "randompass", Email: "ronald99645@gmail.com"}
+			response, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
+			It("no error should be returned", func() {
+				Expect(errFromAdd).NotTo(HaveOccurred())
+			})
+			It("the response should contain the user", func() {
+				Expect(response.GetUser()).To(Equal(user))
+			})
+		})
+
+		Context("if the user is already in the db", func() {
+			user := &pb.User{Id: 5, Password: "somethingnew", Email: "james@gmail.com"}
+			_, errFromAdd := server.CreateUser(context.Background(), &pb.CreateUserRequest{User: user})
+			It("an error should be returned", func() {
+				Expect(errFromAdd).To(HaveOccurred())
 			})
 		})
 	})
