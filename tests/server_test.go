@@ -40,6 +40,29 @@ var _ = Describe("Given the client", func() {
 			})
 		})
 	})
+
+	Describe("Given that we want to fetch a user", func() {
+		Context("if the user exists in the db", func() {
+			userEmail := "james@gmail.com"
+			expectedUserId := int32(5)
+			response, errFromFetch := server.FetchUser(context.Background(), &pb.FetchUserRequest{Email: userEmail})
+			It("no error should be returned", func() {
+				Expect(errFromFetch).NotTo(HaveOccurred())
+			})
+			It("the response should contain the correct user id", func() {
+				observedUserId := response.GetUser().Id
+				Expect(observedUserId).To(Equal(expectedUserId))
+			})
+		})
+
+		Context("if user does not exist in the db", func() {
+			userEmail := "nobodywhoexists@nothing.com"
+			_, errFromFetch := server.FetchUser(context.Background(), &pb.FetchUserRequest{Email: userEmail})
+			It("an error should have occurred", func() {
+				Expect(errFromFetch).To(HaveOccurred())
+			})
+		})
+	})
 })
 
 func createRandomId() int32 {
